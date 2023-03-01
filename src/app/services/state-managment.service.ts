@@ -7,11 +7,17 @@ import { BehaviorSubject } from 'rxjs';
 export class StateManagmentService {
   private stateController:BehaviorSubject<any> = new BehaviorSubject({status:0});
   public stateController$ = this.stateController.asObservable();
-  private _state ={}
+  private _state:any ={}
   constructor() { }
 
   public changeState(data:any){
-    this._state = {data,...this._state};
+    for(let key in data){
+      if (this._state.hasOwnProperty(key)) {
+        this._state = { ...this._state, [key]: data[key] };
+      }else{
+        this._state[key]=data[key];
+      }
+    }
     this.stateController.next(this._state);
   }
   public get state(){

@@ -1,14 +1,143 @@
+.centered {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  /* bring your own prefixes */
+  transform: translate(-50%, -50%);
+  text-align: center;
+  -webkit-transition: all 1s linear;
+  transition: all 1s linear;
+  max-width: 40%;
+}
+
+@media only screen and (max-width: 768px) {
+
+  /* Here are some changes*/
+  .centered {
+    max-width: 80% !important;
+  }
+}
+
+.clock {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  color: white;
+  font-size: medium;
+  cursor: default !important;
+  transition: opacity 1s ease-in-out;
+
+}
+
+.countdown {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  color: white;
+  font-size: medium;
+  cursor: default !important;
+  transition: opacity 1s ease-in-out;
+}
+
+.button {
+  color: white;
+  font-size: medium;
+  border-radius: 10px;
+  padding: 10px;
+  border: 1px solid white;
+  cursor: pointer;
+}
+
+.info {
+  color: lightgray;
+  font-size: medium;
+  border-radius: 5px;
+  padding: 10px;
+  border: 1px solid lightgray;
+}
+
+.error {
+  color: lightgray;
+  font-size: medium;
+  border-radius: 5px;
+  padding: 10px;
+  border: 1px solid rgb(249, 80, 80);
+}
+
+.bottom {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #273f3c;
+}
+
+.b_centered {
+  margin-top: 10px;
+  padding: 20px;
+  font-size: x-large;
+}
+
 .camera {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 80vh;
+  margin: 10px;
+  border: 1px solid #FFF;
+  transition: max-height 0.5s linear;
+}
+
+#camera {
+  display: none;
+}
+
+video {
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 640/480;
+  display: none;
+  transition: max-height 0.5s ease-in-out;
+}
+
+canvas {
+  transition: max-height 0.5s ease-in-out;
+}
+
+/* SCANNER EFFECT*/
+.box {
+  outline: 1px solid #fff;
+  outline-offset: 0px;
+  position: relative;
+}
+
+.box::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  background: #00ffbf;
+  box-shadow: 0 0 30px 10px #00ffbf;
+  clip-path: inset(0);
+  animation:
+    x 1.5s ease-in-out infinite alternate,
+    y 3s ease-in-out infinite;
+}
+
+@keyframes x {
+  to {
+    transform: translateX(-100%);
+    left: 100%;
   }
-  #camera{
-    display: none;
+}
+
+@keyframes y {
+  33% {
+    clip-path: inset(0 0 0 -100px);
   }
-  video {
-    width: 100%;
-    max-width: 640px;
-    display: none;
-  } 
+
+  50% {
+    clip-path: inset(0 0 0 0);
+  }
+
+  83% {
+    clip-path: inset(0 -100px 0 0);
+  }
+}
