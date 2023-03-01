@@ -14,14 +14,12 @@ import { ApiService } from './services/api.service';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
-export class AppComponent implements AfterViewInit, OnInit {
-  time: string = new Date().toLocaleTimeString();
-  
+export class AppComponent implements OnInit {
   @ViewChild('video', { static: false }) video?: ElementRef;
   @ViewChild('canvas', { static: false }) canvas?: ElementRef;
-  videoElement: any;
-  canvasElement: any;
-  canvasContext: any;
+  videoElement?: any;
+  canvasElement?: any;
+  canvasContext?: any;
   stream: any;
 
   /** Scanning Status */
@@ -30,8 +28,11 @@ export class AppComponent implements AfterViewInit, OnInit {
   error:any ="";
   /** countDown */
   countdown:number = 0;
+  /** Timer */
+  time: string = new Date().toLocaleTimeString();
 
   constructor(public stateS: StateManagmentService, private api:ApiService) {
+    //it controls time
     setInterval(() => {
       const date = new Date();
       this.time = date.toLocaleTimeString();
@@ -40,15 +41,16 @@ export class AppComponent implements AfterViewInit, OnInit {
   }
 
   ngOnInit(): void {
+    //state machine
     this.stateS.state.subscribe((state) => {
       switch (state.status) {
         case 0:
           if(this.timeoutScanning) clearTimeout(this.timeoutScanning);
           this.countdown=0;
-          console.log('REPOSO');
+          console.log('Idle Status');
           break;
         case 1:
-          console.log('LEYENDO QR');
+          console.log('Reading QR');
           if(this.timeoutScanning) clearTimeout(this.timeoutScanning);
           this.countdown=30;
           this.timeoutScanning = setTimeout(()=>{
@@ -56,7 +58,7 @@ export class AppComponent implements AfterViewInit, OnInit {
           },30000)
           break;
         case 2:
-          console.log('ERROR LECTURA QR');
+          console.log('Error -->'+state.error);
           if(this.timeoutScanning) clearTimeout(this.timeoutScanning);
           this.countdown=15;
           this.timeoutScanning = setTimeout(()=>{
@@ -65,7 +67,7 @@ export class AppComponent implements AfterViewInit, OnInit {
           this.error = state.error;
           break;
         case 3:
-          console.log('LECTURA QR -> ENVIANDO AL SERVICIO');
+          console.log('QR readed --> sending it to server');
           if(this.timeoutScanning) clearTimeout(this.timeoutScanning);
           this.countdown=30;
           this.timeoutScanning = setTimeout(()=>{
@@ -73,7 +75,7 @@ export class AppComponent implements AfterViewInit, OnInit {
           },30000)
           break;
         case 4:
-          console.log('OPERACION SATISFACTORIA');
+          console.log('Successful Operation');
           if(this.timeoutScanning) clearTimeout(this.timeoutScanning);
           this.countdown=15;
           this.timeoutScanning = setTimeout(()=>{
@@ -84,16 +86,18 @@ export class AppComponent implements AfterViewInit, OnInit {
           if(this.timeoutScanning) clearTimeout(this.timeoutScanning);
           this.countdown=0;
           this.home();
-          console.log('ESTADO DESCONOCIDO');
+          console.log('Unknown Status');
       }
     });
   }
-
-  startScanning() {
+  /**
+   * Shows camera and start scanning QR code
+   */
+  startScanning():void {
     this.stateS.changeState({ status: 1 });
     this.videoElement = this.video?.nativeElement;
     this.canvasElement = this.canvas?.nativeElement;
-    this.canvasContext = this.canvasElement.getContext('2d', {
+    this.canvasContext = this.canvasElement?.getContext('2d', {
       willReadFrequently: true,
     });
     const constraints = {
@@ -115,9 +119,10 @@ export class AppComponent implements AfterViewInit, OnInit {
         console.log(err);
       });
   }
-  ngAfterViewInit(): void {}
-
-  async tick() {
+  /**
+   * Executed every frame in scanning mode. Analyzes de camera to read QR code
+   */
+  async tick():Promise<void> {
     if (this.videoElement.readyState === this.videoElement.HAVE_ENOUGH_DATA) {
       this.canvasElement.hidden = false;
       this.canvasElement.height = this.videoElement.videoHeight;
@@ -151,23 +156,50 @@ export class AppComponent implements AfterViewInit, OnInit {
       await requestAnimationFrame(this.tick.bind(this));
     }
   }
-
+  /**
+   * Stops stream from camera
+   */
   stopScanning(): void {
     this.stream?.getTracks().forEach((track: any) => {
       (track as any).stop();
     });
   }
-
-  cancelScanning() {
+  public cancelScanning(): void {
     this.stopScanning();
     this.stateS.changeState({ status: 0 });
   }
+  cancelOnErrorTimeout(str:any){
+    this.stopScanning();
+    this.stateS.changeState({status:2,error:str});
+    this.timeoutScanning=null;
+  }
+  public home(){
+    this.stateS.changeState({status:0})
+  }
 
-  scanningGrid(context: any,w:any,h:any) {
-    
+  /**
+   * Sends QR code to server
+   * @param code 
+   */
+  async sendQR(code:any):Promise<void>{
+    this.stateS.changeState({status:3})
+    this.stopScanning();
+    let res:any = await this.api.sendQR(code);
+    if(res && res['error']){
+      this.stateS.changeState({status:2,error:'La validación de su código no ha sido satisfactoria. Quizá deba renovar su código QR.'})
+    }else{
+      this.stateS.changeState({status:4,msg:"OK"})
+    }
+  }
+  /**
+   * Paints a grid over canvas. Only for ornamental purposes
+   * @param context canvas' context
+   * @param w canvas width
+   * @param h canvas height
+   */
+  scanningGrid(context: any,w:any,h:any):void {
     context.lineWidth = 1;
     context.strokeStyle = '#FFF';
-
     for (let x = 1; x < w; x += 100) {
       context.moveTo(x, 0);
       context.lineTo(x, h);
@@ -177,23 +209,5 @@ export class AppComponent implements AfterViewInit, OnInit {
       context.lineTo(w, y);
     }
     context.stroke();
-  }
-  cancelOnErrorTimeout(str:any){
-    this.stopScanning();
-    this.stateS.changeState({status:2,error:str});
-    this.timeoutScanning=null;
-  }
-  home(){
-    this.stateS.changeState({status:0})
-  }
-  async sendQR(code:any){
-    this.stateS.changeState({status:3})
-    this.stopScanning();
-    let res:any = await this.api.sendQR(code);
-    if(res && res['error']){
-      this.stateS.changeState({status:2,error:'La validación de su código no ha sido satisfactoria. Quizá deba renovar su código QR.'})
-    }else{
-      this.stateS.changeState({status:4,msg:"OK"})
-    }
   }
 }
