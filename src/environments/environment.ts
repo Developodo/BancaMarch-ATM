@@ -1,6 +1,6 @@
 
 export const environment = {
   production: false,
-  atmID:1,
-  endpoint:'https://localhost'
+  atmID: (window as any)["env"]["atmID"] || "2",
+  endpoint: (window as any)["env"]["apiUrl"] || "http://localhost",
 };
