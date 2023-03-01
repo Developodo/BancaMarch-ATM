@@ -1,0 +1,14 @@
+.camera {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+  }
+  #camera{
+    display: none;
+  }
+  video {
+    width: 100%;
+    max-width: 640px;
+    display: none;
+  } 
