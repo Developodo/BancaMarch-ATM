@@ -8,6 +8,7 @@ import {
 import jsQR from 'jsqr';
 import { StateManagmentService } from './services/state-managment.service';
 import { ApiService } from './services/api.service';
+import { environment } from '../environments/environment.prod';
 
 @Component({
   selector: 'app-root',
@@ -17,6 +18,7 @@ import { ApiService } from './services/api.service';
 export class AppComponent implements OnInit {
   @ViewChild('video', { static: false }) video?: ElementRef;
   @ViewChild('canvas', { static: false }) canvas?: ElementRef;
+  @ViewChild('cameraDiv',{static:false}) cameraDiv?:ElementRef;
   videoElement?: any;
   canvasElement?: any;
   canvasContext?: any;
@@ -26,6 +28,8 @@ export class AppComponent implements OnInit {
   timeoutScanning:any=null;
   /** Error Status */
   error:any ="";
+  /** Succesfful Status */
+  msg:any ="";
   /** countDown */
   countdown:number = 0;
   /** Timer */
@@ -81,6 +85,7 @@ export class AppComponent implements OnInit {
           this.timeoutScanning = setTimeout(()=>{
            this.home();
           },15000)
+          this.msg = state.msg;
           break;
         default:
           if(this.timeoutScanning) clearTimeout(this.timeoutScanning);
@@ -112,7 +117,7 @@ export class AppComponent implements OnInit {
         this.videoElement.srcObject = stream;
         this.videoElement.setAttribute('playsinline', true);
         this.videoElement.play();
-        
+        (this.cameraDiv?.nativeElement as HTMLDivElement)?.classList.add("scanner");
         await requestAnimationFrame(await this.tick.bind(this));
       })
       .catch((err) => {
@@ -163,6 +168,7 @@ export class AppComponent implements OnInit {
     this.stream?.getTracks().forEach((track: any) => {
       (track as any).stop();
     });
+    (this.cameraDiv?.nativeElement as HTMLDivElement)?.classList.remove("scanner");
   }
   public cancelScanning(): void {
     this.stopScanning();
@@ -188,7 +194,13 @@ export class AppComponent implements OnInit {
     if(res && res['error']){
       this.stateS.changeState({status:2,error:'La validación de su código no ha sido satisfactoria. Quizá deba renovar su código QR.'})
     }else{
-      this.stateS.changeState({status:4,msg:"OK"})
+      let msg;
+      if(res['amount']>0){
+        msg=`Ha realizado un ingreso de ${res['amount']} €`
+      }else{
+        msg=`Ha realizado una extracción de ${res['amount']} €`
+      }
+      this.stateS.changeState({status:4,msg:msg})
     }
   }
   /**

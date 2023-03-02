@@ -9,12 +9,18 @@ import { lastValueFrom, timeout } from 'rxjs';
 export class ApiService {
 
   constructor(private http:HttpClient) { }
-
+  /**
+   *  ‘atmId’ : dataNumber,
+   *  ‘securityCode’ : dataNumber
+   * @param code 
+   * @returns 
+   */
   public async sendQR(code:any){
     try{
+      //return {amount:500}; //mock test
       return await lastValueFrom(this.http.post(environment.endpoint,{
-        atm:environment.atmID,
-        code:code
+        atmId:environment.atmID,
+        securityCode:code
       }).pipe(timeout(30000)));
     }catch(err){
       return {error:true,msg:err};

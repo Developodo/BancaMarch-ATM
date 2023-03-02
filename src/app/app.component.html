@@ -12,8 +12,8 @@
   >
     Realizar una operación
   </div>
-  <div
-    class="camera box"
+  <div #cameraDiv
+    class="camera"
     [style.max-height]="
       (this.stateS.state | async).status == 1 ? '600px' : '0px'
     "
@@ -51,13 +51,13 @@
     <img src="assets/server.gif" width="80px" />
   </div>
   <div class="info" *ngIf="(this.stateS.state | async).status == 4">
-    Enhorabuena, su operación ha sido realizado con éxito<br />
+    {{msg}}<br />
     <img src="assets/ok.gif" width="100px" />
   </div>
   <div
     class="b_centered button"
     (click)="home()"
-    *ngIf="(this.stateS.state | async).status == 2"
+    *ngIf="(this.stateS.state | async).status == 2 || (this.stateS.state | async).status == 4"
   >
     Volver al inicio
   </div>

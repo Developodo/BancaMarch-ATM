@@ -100,13 +100,13 @@ canvas {
 }
 
 /* SCANNER EFFECT*/
-.box {
+.scanner {
   outline: 1px solid #fff;
   outline-offset: 0px;
   position: relative;
 }
 
-.box::before {
+.scanner::before {
   content: "";
   position: absolute;
   top: 0;
