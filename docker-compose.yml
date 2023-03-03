@@ -5,7 +5,7 @@ services:
     image: developodo/bancamarchatm:v1
     container_name: bancamarchatm
     env_file: 
-      - "./data/.env"
+      - "./data/conf.env"
     ports:
       - "80:80"
       - "443:443"
